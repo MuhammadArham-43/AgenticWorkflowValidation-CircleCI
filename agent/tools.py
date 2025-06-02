@@ -5,14 +5,27 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field, ValidationError
 
 
+class WikipediaToolInputSchema(BaseModel):
+    """Input for the search_wikipedia tool"""
+    query: str = Field(description="Query to search Wikipedia for")
+
 class WikipediaArticle(BaseModel):
     """Represents a summary of a Wikipedia article"""
     title: str = Field(description="Title of the Wikipedia article")
     summary: str = Field(description="Summary of the Wikipedia article")
     url: str = Field(description="URL of the Wikipedia article")
 
+class CoordinatesToolInputSchema(BaseModel):
+    """Input for the get_coordinates_from_city tool"""
+    city_name: str = Field(description="Name of the city to get coordinates for")
+
 class Coordinates(BaseModel):
     """Represents geographical coordinates for a location"""
+    latitude: float = Field(description="Latitude of the location")
+    longitude: float = Field(description="Longitude of the location")
+
+class WeatherToolInputSchema(BaseModel):
+    """Input for the get_current_weather tool"""
     latitude: float = Field(description="Latitude of the location")
     longitude: float = Field(description="Longitude of the location")
 
@@ -28,7 +41,7 @@ class CurrentWeather(BaseModel):
     time: str = Field(description="Current time of the weather observation in ISO format")
 
 
-@tool
+@tool("get_coordinates_from_city", args_schema=CoordinatesToolInputSchema)
 def get_coordinates_from_city(city_name: str) -> str:
     """
     Converts a city name into a geographical latitutde and longitude using Open-Meteo Geocoding API.
@@ -73,7 +86,7 @@ def get_coordinates_from_city(city_name: str) -> str:
         return json.dumps({"error": f"An unexpected error occurred during coordinate retrieval: {e}"})
 
 
-@tool
+@tool("get_current_weather", args_schema=WeatherToolInputSchema)
 def get_current_weather(latitude: float, longitude: float) -> str:
     """
     Retrieves the current weather conditions for a given latitude and longitude using Open-Meteo Weather API.
@@ -122,7 +135,7 @@ def get_current_weather(latitude: float, longitude: float) -> str:
         return json.dumps({"error": f"An unexpected error occurred during weather retrieval: {e}"})
 
 
-@tool
+@tool("search_wikipedia", args_schema=WikipediaToolInputSchema)
 def search_wikipedia(query: str) -> str:
     """
     Searches Wikipedia for a given query and returns a summary and URL.
@@ -175,7 +188,7 @@ def search_wikipedia(query: str) -> str:
         return json.dumps({"error": f"An unexpected error occurred during Wikipedia search: {e}"})
 
 
-@tool
+@tool("calculate")
 def calculate(expression: str) -> str:
     """
     Evaluates a mathematical expression (e.g '2 + 2 * 3').
